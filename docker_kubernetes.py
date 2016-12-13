@@ -11,8 +11,9 @@ def install_master(vm):
 		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 		ssh.connect(vm.ip, username=vm.user, key_filename=vm.key)
 		sftp = ssh.open_sftp()
+		file_path = os.path.dirname(__file__)
 		sftp.chdir('/tmp/')
-		install_script = os.getcwd() + "/" + "docker_kubernetes.sh"
+		install_script = file_path + "/" + "docker_kubernetes.sh"
 		sftp.put(install_script, "kubernetes_setup.sh")
 		stdin, stdout, stderr = ssh.exec_command("sudo sh /tmp/kubernetes_setup.sh")
 		stdout.read()
@@ -24,7 +25,7 @@ def install_master(vm):
 		stdout.read()
 		stdin, stdout, stderr = ssh.exec_command("sudo chgrp %s /tmp/admin.conf" % (vm.user))
 		stdout.read()
-		sftp.get("/tmp/admin.conf", os.getcwd()+"/admin.conf")
+		sftp.get("/tmp/admin.conf", file_path+"/admin.conf")
 		print "%s: ========= Kubernetes Master Installed =========" % (vm.ip)
 	except Exception as e:
 		print '%s: %s' % (vm.ip, e)
@@ -39,7 +40,8 @@ def install_slave(join_cmd, vm):
 		ssh.connect(vm.ip, username=vm.user, key_filename=vm.key)
 		sftp = ssh.open_sftp()
 		sftp.chdir('/tmp/')
-		install_script = os.getcwd() + "/" + "docker_kubernetes.sh"
+		file_path = os.path.dirname(__file__)
+		install_script = file_path + "/" + "docker_kubernetes.sh"
 		sftp.put(install_script, "kubernetes_setup.sh")
 		stdin, stdout, stderr = ssh.exec_command("sudo sh /tmp/kubernetes_setup.sh")
 		stdout.read()

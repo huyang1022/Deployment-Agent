@@ -11,7 +11,8 @@ def install_registry(vm, install_script):
 		ssh.connect(vm.ip, username=vm.user, key_filename=vm.key)
 		sftp = ssh.open_sftp()
 		sftp.chdir('/root/')
-		registry_script = os.getcwd() + "/" + "docker_registry.sh"
+		file_path = os.path.dirname(__file__)
+		registry_script = file_path + "/" + "docker_registry.sh"
 		sftp.put(registry_script, "registry_setup.sh")
 		stdin, stdout, stderr = ssh.exec_command("sudo sh /root/registry_setup.sh")
 		stdout.read()
