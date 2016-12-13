@@ -15,6 +15,8 @@ def install_master(vm):
 		sftp.chdir('/tmp/')
 		install_script = file_path + "/" + "docker_kubernetes.sh"
 		sftp.put(install_script, "kubernetes_setup.sh")
+		stdin, stdout, stderr = ssh.exec_command("sudo hostname ip-%s" % (vm.ip.replace('.','-')))
+		stdout.read()
 		stdin, stdout, stderr = ssh.exec_command("sudo sh /tmp/kubernetes_setup.sh")
 		stdout.read()
 		stdin, stdout, stderr = ssh.exec_command("sudo kubeadm init --api-advertise-addresses=%s" % (vm.ip))
@@ -43,6 +45,8 @@ def install_slave(join_cmd, vm):
 		file_path = os.path.dirname(__file__)
 		install_script = file_path + "/" + "docker_kubernetes.sh"
 		sftp.put(install_script, "kubernetes_setup.sh")
+		stdin, stdout, stderr = ssh.exec_command("sudo hostname ip-%s" % (vm.ip.replace('.','-')))
+		stdout.read()
 		stdin, stdout, stderr = ssh.exec_command("sudo sh /tmp/kubernetes_setup.sh")
 		stdout.read()
 		stdin, stdout, stderr = ssh.exec_command("sudo %s" % (join_cmd))

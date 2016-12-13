@@ -32,8 +32,8 @@ def main():
     else:
         while True:
             line = in_file.readline()
-            if not line: break
             file_list = line.split()
+            if not file_list: break
             vm = VmInfo(file_list[0], file_list[1], file_list[2], "")
             if args.process == "engine":
                 threads.append(threading.Thread(target = docker_engine.install_engine, args = (vm, )))
