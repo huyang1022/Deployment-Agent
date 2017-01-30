@@ -1,4 +1,3 @@
-52.59.221.181 ubuntu /Users/Oceans/Downloads/oceans_aws.pem master
-52.59.218.151 ubuntu /Users/Oceans/Downloads/oceans_aws.pem slave
-
-
+145.100.133.147 root /Users/Oceans/.ssh/id_dsa master
+145.100.133.148 root /Users/Oceans/.ssh/id_dsa slave
+145.100.133.132 root /Users/Oceans/.ssh/id_dsa slave

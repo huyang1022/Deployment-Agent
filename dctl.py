@@ -1,11 +1,26 @@
-#! /usr/bin/env python
+ #! /usr/bin/env python
+
+ # Copyright 2017 --Yang Hu--
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ #
+ #      http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
 
 __author__ = 'Yang Hu'
 
 import argparse, os, sys
 import time
 from vm_info import VmInfo
-import docker_engine, docker_registry, docker_execute, docker_distribute, docker_kubernetes
+import docker_engine, docker_registry, docker_execute, docker_distribute, docker_kubernetes, docker_swarm, docker_image
 import threading
 
 def parse_args(args_str):
@@ -24,30 +39,30 @@ def parse_args(args_str):
 def main():
     args = parse_args(sys.argv[1:])
     in_file = open(args.file, "r")
-    threads = []
-    if args.process == "distribute":
-        docker_distribute.distribute(in_file)
+    vm_list = []
+    while True:
+        line = in_file.readline()
+        file_list = line.split()
+        if not file_list: break
+        vm = VmInfo(file_list[0], file_list[1], file_list[2], file_list[3])
+        vm_list.append(vm)
+
+    if args.process == "engine":
+        docker_engine.run(vm_list)
     if args.process == "kubernetes":
-        docker_kubernetes.install_kubernetes(in_file)
-    else:
-        while True:
-            line = in_file.readline()
-            file_list = line.split()
-            if not file_list: break
-            vm = VmInfo(file_list[0], file_list[1], file_list[2], "")
-            if args.process == "engine":
-                threads.append(threading.Thread(target = docker_engine.install_engine, args = (vm, )))
-                threads[-1].start()
-            elif args.process == "registry":
-                threads.append(threading.Thread(target = docker_registry.install_registry, args = (vm, file_list[3])))
-                threads[-1].start()
-            elif args.process == "execute":
-                threads.append(threading.Thread(targe = docker_execute.execute, args = (vm, file_list[3])))
-                threads[-1].start()
-    for t in threads:
-        t.join()
+        docker_kubernetes.run(vm_list)
+    if args.process == "swarm":
+        docker_swarm.run(vm_list)
+    if args.process == "image":
+        docker_image.run(vm_list)     
+    if args.process == "execute":
+        docker_execute.run(vm_list)
 
 
+    if args.process == "registry":
+        docker_registry.run(in_file)
+    if args.process == "distribute":
+        docker_distribute.run(in_file)
     
 if __name__ == '__main__':
     start = time.time()

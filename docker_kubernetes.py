@@ -1,10 +1,24 @@
-#! /usr/bin/env python
+ #! /usr/bin/env python
 
+ # Copyright 2017 --Yang Hu--
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ #
+ #      http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
 __author__ = 'Yang Hu'
 
 import paramiko, os
 from vm_info import VmInfo
-def install_master(vm):
+def install_manager(vm):
 	try:
 		print "%s: ====== Start Kubernetes Master Installing ======" % (vm.ip)
 		ssh = paramiko.SSHClient()
@@ -34,7 +48,7 @@ def install_master(vm):
 	ssh.close()
 	return retstr[-1]
 
-def install_slave(join_cmd, vm):
+def install_worker(join_cmd, vm):
 	try:
 		print "%s: ====== Start Kubernetes Slave Installing ======" % (vm.ip)
 		ssh = paramiko.SSHClient()
@@ -56,21 +70,12 @@ def install_slave(join_cmd, vm):
 		print '%s: %s' % (vm.ip, e)
 	ssh.close()
 
-def install_kubernetes(in_file):
-	vm_list = []
-	while True:
-		line = in_file.readline()
-		file_list = line.split()
-		if not file_list: break
-		vm = VmInfo(file_list[0], file_list[1], file_list[2], file_list[3])
-		vm_list.append(vm)
-
-
+def run(vm_list):
 	for i in vm_list:
-		if i.role == "master": join_cmd = install_master(i)
+		if i.role == "master": join_cmd = install_manager(i)
 
 	join_cmd = join_cmd.encode()
 	join_cmd = join_cmd.strip()
 
 	for i in vm_list:
-		if i.role == "slave": install_slave(join_cmd, i)
+		if i.role == "slave": install_worker(join_cmd, i)

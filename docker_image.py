@@ -18,27 +18,28 @@
 __author__ = 'Yang Hu'
 
 import paramiko, os
-def install_registry(vm, install_script):
+import threading
+def pull_image(vm):
 	try:
-		print '%s: ====== Start Docker Registry Installing ======' % (vm.ip)
+		print "%s: ====== Start Pulling Image ======" % (vm.ip)
 		ssh = paramiko.SSHClient()
 		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 		ssh.connect(vm.ip, username=vm.user, key_filename=vm.key)
 		sftp = ssh.open_sftp()
-		sftp.chdir('/root/')
-		file_path = os.path.dirname(__file__)
-		registry_script = file_path + "/" + "docker_registry.sh"
-		sftp.put(registry_script, "registry_setup.sh")
-		stdin, stdout, stderr = ssh.exec_command("sudo sh /root/registry_setup.sh")
+		sftp.chdir('/tmp/')
+		sftp.put("TBD.sh", "pull_image.sh")
+		stdin, stdout, stderr = ssh.exec_command("sudo sh /tmp/pull_image.sh")
 		stdout.read()
-		sftp.put(install_script, "images_setup.sh")
-		stdin, stdout, stderr = ssh.exec_command("sudo sh /root/images_setup.sh")
-		stdout.read()
-		print '%s: ========= Docker Registry Installed =========' % (vm.ip)
+		print "%s: =========  Image Pulled   =========" % (vm.ip)
 	except Exception as e:
 		print '%s: %s' % (vm.ip, e)
 	ssh.close()
 
-
-
-
+def run(vm_list):
+	threads = []
+	for i in vm_list:
+		threads.append(threading.Thread(target = pull_image, args = (i, )))
+		threads[-1].start()
+	for t in threads:
+		t.join()
+	
