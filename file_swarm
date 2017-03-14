@@ -1,3 +1,3 @@
-145.100.133.149 root /Users/Oceans/.ssh/id_dsa  master
-145.100.133.152 root /Users/Oceans/.ssh/id_dsa  slave
+145.100.133.133 root /Users/Oceans/.ssh/id_dsa  master
+145.100.133.136 root /Users/Oceans/.ssh/id_dsa  slave
 

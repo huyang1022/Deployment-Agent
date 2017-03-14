@@ -22,13 +22,13 @@ from img_info import ImgInfo
 from vm_info import VmInfo
 import threading
 
-def pull_img(img, in_img, fl_img, in_ip, in_flag, now_img, start_time):
+def pull_img(ssh, img, in_img, fl_img, in_ip, in_flag, now_img, start_time):
 	time1 = time.time()
 	try:
 		print "%s, %s: ======= Start Distributing =======" % (img.ip, img.image)
-		ssh = paramiko.SSHClient()
-		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-		ssh.connect(img.ip, username=img.user, key_filename=img.key)
+	#	ssh = paramiko.SSHClient()
+	#	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	#	ssh.connect(img.ip, username=img.user, key_filename=img.key)
 		# stdin, stdout, stderr = ssh.exec_command("sudo docker pull %s" % (img.image))
 		# stdout.read()
 		# stdin, stdout, stderr = ssh.exec_command("sudo docker rmi %s" % (img.image))
@@ -38,7 +38,7 @@ def pull_img(img, in_img, fl_img, in_ip, in_flag, now_img, start_time):
 		print "%s, %s: ======= Finish Distributing =======" % (img.ip, img.image)
 	except Exception as e:\
 		print '%s: %s' % (img.ip, e)
-	ssh.close()
+	#ssh.close()
 	time2 = time.time()
 	finish_time = start_time + time2 - time1
 	in_img.append(now_img)
@@ -58,44 +58,48 @@ def tc_init(vm):
 		stdout.read()
 		stdin, stdout, stderr = ssh.exec_command("sudo tc qdisc add dev eth1 root handle 1:0 htb")
 		stdout.read()
-		stdin, stdout, stderr = ssh.exec_command("sudo tc class add dev eth1 parent 1:0 classid 1:1 htb rate 1000mbit")
+		stdin, stdout, stderr = ssh.exec_command("sudo tc class add dev eth1 parent 1:0 classid 1:1 htb rate %dmbit" % (vm.bandwidth))
 		stdout.read()
-		stdin, stdout, stderr = ssh.exec_command("sudo tc class add dev eth1 parent 1:0 classid 1:2 htb rate 10kbit")
+		stdin, stdout, stderr = ssh.exec_command("sudo tc filter add dev eth1 parent 1:0 prio 1 u32 match ip dst 192.168.1.1 flowid 1:1")
 		stdout.read()
+#		stdin, stdout, stderr = ssh.exec_command("sudo tc class add dev eth1 parent 1:0 classid 1:2 htb rate 10kbit")
+#		stdout.read()
 		print '%s: ========= Finish TC Initialization =======' % (vm.ip)
 	except Exception as e:
 		print '%s: %s' % (vm.ip, e)
 	ssh.close()
 
-def tc_add(vm, ip, bandwidth):
+def tc_add(ssh,vm, bandwidth):
 	try:
-		print '%s, %s: =========== TC Adding =============' % (ip, bandwidth)
-		ssh = paramiko.SSHClient()
-		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-		ssh.connect(vm.ip, username=vm.user, key_filename=vm.key)
-		stdin, stdout, stderr = ssh.exec_command("sudo tc filter del dev eth1 parent 1:0 prio 1")
-		stdout.read()
+		print '%s, %s: =========== TC Adding =============' % (vm.ip, bandwidth)
+#		ssh = paramiko.SSHClient()
+#		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#		ssh.connect(vm.ip, username=vm.user, key_filename=vm.key)
+#		stdin, stdout, stderr = ssh.exec_command("sudo tc filter del dev eth1 parent 1:0 prio 1")
+#		stdout.read()
 		stdin, stdout, stderr = ssh.exec_command("sudo tc class change dev eth1 parent 1:0 classid 1:1 htb rate %dmbit" % (bandwidth))
 		stdout.read()
-		stdin, stdout, stderr = ssh.exec_command("sudo tc filter add dev eth1 parent 1:0 prio 1 u32 match ip dst %s flowid 1:1" %(ip))
-		stdout.read()
-		print '%s, %s: ========= Finish TC Adding =========' % (ip, bandwidth)
+#		stdin, stdout, stderr = ssh.exec_command("sudo tc filter add dev eth1 parent 1:0 prio 1 u32 match ip dst %s flowid 1:1" %(ip))
+#		stdout.read()
+		print '%s, %s: ========= Finish TC Adding =========' % (vm.ip, bandwidth)
 	except Exception as e:
 		print '%s: %s' % (vm.ip, e)
-	ssh.close()
+#	ssh.close()
 
-def tc_del(vm):
+def tc_del(ssh, vm):
 	try:
 		print '%s: =========== TC Deleting =============' % (vm.ip)
-		ssh = paramiko.SSHClient()
-		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-		ssh.connect(vm.ip, username=vm.user, key_filename=vm.key)
-		stdin, stdout, stderr = ssh.exec_command("sudo tc filter del dev eth1 parent 1:0 prio 1")
+#		ssh = paramiko.SSHClient()
+#		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#		ssh.connect(vm.ip, username=vm.user, key_filename=vm.key)
+#		stdin, stdout, stderr = ssh.exec_command("sudo tc filter del dev eth1 parent 1:0 prio 1")
+#		stdout.read()
+		stdin, stdout, stderr = ssh.exec_command("sudo tc class change dev eth1 parent 1:0 classid 1:1 htb rate %dmbit" % (vm.bandwidth))
 		stdout.read()
 		print '%s: ========= Finish TC Deleting =========' % (vm.ip)
 	except Exception as e:
 		print '%s: %s' % (vm.ip, e)
-	ssh.close()
+#	ssh.close()
 
 def tc_add_limit(vm, ip, priority):
 	try:
@@ -125,31 +129,61 @@ def tc_del_limit(vm, ip, priority):
 		print '%s: %s' % (vm.ip, e)
 	ssh.close()
 
-def distribute(in_file):
+def ssh_init(ssh_list):
+	ssh = paramiko.SSHClient()
+	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	ssh.connect("192.1.242.12", username="root", key_filename="/Users/Oceans/.ssh/id_dsa")
+	ssh_list.append(ssh)
+	ssh = paramiko.SSHClient()
+	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	ssh.connect("192.1.242.16", username="root", key_filename="/Users/Oceans/.ssh/id_dsa")
+	ssh_list.append(ssh)
+	ssh = paramiko.SSHClient()
+	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	ssh.connect("192.1.242.11", username="root", key_filename="/Users/Oceans/.ssh/id_dsa")
+	ssh_list.append(ssh)
+	ssh = paramiko.SSHClient()
+	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	ssh.connect("192.1.242.14", username="root", key_filename="/Users/Oceans/.ssh/id_dsa")
+	ssh_list.append(ssh)
+	ssh = paramiko.SSHClient()
+	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	ssh.connect("192.1.242.13", username="root", key_filename="/Users/Oceans/.ssh/id_dsa")
+	ssh_list.append(ssh)
+
+
+def run(in_file):
 	img_list = []
 	while True:
 		line = in_file.readline()
 		file_list = line.split()
 		if not file_list: break
-		img = ImgInfo(file_list[0], file_list[1], file_list[2], file_list[3], float(file_list[4]), float(file_list[5]), file_list[6])
+		img = ImgInfo(file_list[0], file_list[1], file_list[2], file_list[3], int(file_list[4]), int(file_list[5]), float(file_list[6]), float(file_list[7]), file_list[8])
 		img_list.append(img)
 	
 	img_cnt = len(img_list)
 	ip_list = ["192.168.1.2", "192.168.1.3", "192.168.1.4", "192.168.1.5"]
 	bd_list = [100, 70, 50, 20]
 	tc_list = [0,0,0,0]
-	vm_registry = VmInfo("145.100.133.159", "root", "/Users/Oceans/.ssh/id_dsa", "")
+	vm_registry = VmInfo("192.1.242.13", "root", "/Users/Oceans/.ssh/id_dsa", "")
 	total_bd = 100
 	threads = []
+
+	ssh_list = []
+	ssh_init(ssh_list)
+
+
 # =============== Bandwidth-aware EDF ============================
 	img_list.sort(key = lambda x: x.start + x.deadline)
-	tc_init(vm_registry)
 	in_flag = []
 	in_ip = []
 	in_img = []
 	fl_img = []
 	tc_bd = 0
 	tc_img = 0
+	for i in img_list:
+		tc_init(i)
+
 	start_time = time.time()
 
 	while len(in_img) < img_cnt:
@@ -169,7 +203,8 @@ def distribute(in_file):
 			if (now_img not in in_img) and (now_time > i.start) and (i.private_ip not in in_ip):
 				in_flag.append(now_img)
 				in_ip.append(i.private_ip)
-				threads.append(threading.Thread(target = pull_img, args = (i, in_img, fl_img, in_ip, in_flag, now_img, now_time)))
+				j = ip_list.index(i.private_ip)
+				threads.append(threading.Thread(target = pull_img, args = (ssh_list[j], i, in_img, fl_img, in_ip, in_flag, now_img, now_time)))
 				threads[-1].start()
 				# break
 			if (now_img in in_flag):
@@ -179,20 +214,25 @@ def distribute(in_file):
 						if (tc_img != now_img) or (tc_bd != total_bd - now_bd):
 							tc_img = now_img
 							tc_bd = total_bd - now_bd
-							tc_add(vm_registry, i.private_ip, tc_bd)
+							tc_add(ssh_list[j], i, tc_bd)
+							i.throughput = tc_bd
 					else:
-						if (tc_list[j] == -1):
-							tc_list[j] = 0
-							tc_del_limit(vm_registry, i.private_ip, now_img + 1)
+						if i.throughput != i.bandwidth:
+							tc_del(ssh_list[j],i)
+							i.throughput = i.bandwidth
 				else:
-					if (tc_list[j] == 0):
-						tc_list[j] = -1
-						tc_add_limit(vm_registry, i.private_ip, now_img + 1)
+					if i.throughput != 1:
+						tc_add(ssh_list[j], i, 1)
+						i.throughput = 1;
 				now_bd += bd_list[j]
 
 		if now_bd < total_bd:
 			if tc_bd != 0:
-				tc_del(vm_registry)
+				for i in img_list:
+					if i.throughput != i.bandwidth:
+						j = ip_list.index(i.private_ip)
+						tc_del(ssh_list[j], i)
+						i.throughput = i.bandwidth
 				tc_bd = 0
 				tc_img = 0
 
@@ -221,10 +261,11 @@ def distribute(in_file):
 
 # ===============  EDF ============================
 	img_list.sort(key = lambda x: x.start + x.deadline)
-	tc_init(vm_registry)
 	in_ip = []
 	in_img = []
 	fl_img = []
+	for i in img_list:
+		tc_init(i)
 	start_time = time.time()
 
 	while len(in_img) < img_cnt:
@@ -236,7 +277,8 @@ def distribute(in_file):
 				if (now_img not in in_img) and (now_time > i.start) and (i.private_ip not in in_ip):
 					in_flag.append(now_img)
 					in_ip.append(i.private_ip)
-					threads.append(threading.Thread(target = pull_img, args = (i, in_img, fl_img, in_ip, in_flag, now_img, now_time)))
+					j = ip_list.index(i.private_ip)
+					threads.append(threading.Thread(target = pull_img, args = (ssh_list[j], i, in_img, fl_img, in_ip, in_flag, now_img, now_time)))
 					threads[-1].start()
 					break
 		time.sleep(0.01)
@@ -253,10 +295,11 @@ def distribute(in_file):
 
 	# ===============  FIFO ============================
 	img_list.sort(lambda x,y: cmp(x.start, y.start))
-	tc_init(vm_registry)
 	in_ip = []
 	in_img = []
 	fl_img = []
+	for i in img_list:
+		tc_init(i)
 	start_time = time.time()
 
 	while len(in_img) < img_cnt:
@@ -268,7 +311,8 @@ def distribute(in_file):
 				if (now_img not in in_img) and (now_time > i.start) and (i.private_ip not in in_ip):
 					in_flag.append(now_img)
 					in_ip.append(i.private_ip)
-					threads.append(threading.Thread(target = pull_img, args = (i, in_img, fl_img, in_ip, in_flag, now_img, now_time)))
+					j = ip_list.index(i.private_ip)
+					threads.append(threading.Thread(target = pull_img, args = (ssh_list[j], i, in_img, fl_img, in_ip, in_flag, now_img, now_time)))
 					threads[-1].start()
 					break
 		time.sleep(0.01)
@@ -285,11 +329,12 @@ def distribute(in_file):
 
 	# ===============  PARALLEL ============================
 	img_list.sort(lambda x,y: cmp(x.start, y.start))
-	tc_init(vm_registry)
 	in_ip = []
 	in_img = []
 	fl_img = []
 	in_flag = []
+	for i in img_list:
+		tc_init(i)
 	start_time = time.time()
 
 	while len(in_img) < img_cnt:
@@ -300,7 +345,8 @@ def distribute(in_file):
 			if (now_img not in in_img) and (now_time > i.start) and (now_img not in in_flag):
 				in_flag.append(now_img)
 				in_ip.append(i.private_ip)
-				threads.append(threading.Thread(target = pull_img, args = (i, in_img, fl_img, in_ip, in_flag, now_img, now_time)))
+				j = ip_list.index(i.private_ip)
+				threads.append(threading.Thread(target = pull_img, args = (ssh_list[j], i, in_img, fl_img, in_ip, in_flag, now_img, now_time)))
 				threads[-1].start()
 				break
 		time.sleep(0.01)

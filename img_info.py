@@ -16,11 +16,13 @@
  
 
 class ImgInfo:
-	def __init__(self, ip, private_ip, user, key, start, deadline, image):
+	def __init__(self, ip, private_ip, user, key, bandwidth, throughput, start, deadline, image):
 		self.ip = ip
 		self.private_ip = private_ip
 		self.user = user
 		self.key = key
+		self.bandwidth = bandwidth
+		self.throughput = throughput
 		self.start = start
 		self.deadline = deadline
 		self.image = image

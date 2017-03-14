@@ -17,11 +17,10 @@
 
 __author__ = 'Yang Hu'
 
-import argparse, os, sys
+import argparse, sys
 import time
 from vm_info import VmInfo
-import docker_engine, docker_registry, docker_execute, docker_distribute, docker_kubernetes, docker_swarm, docker_image
-import threading
+import docker_engine, docker_registry, docker_execute, docker_distribute, docker_kubernetes, docker_swarm, docker_image, control_agent
 
 def parse_args(args_str):
     description = "Deployment Agent"
@@ -40,6 +39,12 @@ def main():
     args = parse_args(sys.argv[1:])
     in_file = open(args.file, "r")
     vm_list = []
+
+    if args.process == "registry":
+        docker_registry.run(in_file)
+    if args.process == "distribute":
+        docker_distribute.run(in_file)
+        
     while True:
         line = in_file.readline()
         file_list = line.split()
@@ -57,12 +62,11 @@ def main():
         docker_image.run(vm_list)     
     if args.process == "execute":
         docker_execute.run(vm_list)
+    if args.process == "agent":
+        control_agent.run(vm_list)
 
 
-    if args.process == "registry":
-        docker_registry.run(in_file)
-    if args.process == "distribute":
-        docker_distribute.run(in_file)
+    
     
 if __name__ == '__main__':
     start = time.time()

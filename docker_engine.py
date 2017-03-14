@@ -27,7 +27,7 @@ def install_engine(vm):
 		ssh.connect(vm.ip, username=vm.user, key_filename=vm.key)
 		sftp = ssh.open_sftp()
 		sftp.chdir('/tmp/')
-		file_path = os.path.dirname(__file__)
+		file_path = os.path.dirname(os.path.abspath(__file__))
 		install_script = file_path + "/" + "docker_engine.sh"
 		sftp.put(install_script, "engine_setup.sh")
 		stdin, stdout, stderr = ssh.exec_command("sudo sh /tmp/engine_setup.sh")

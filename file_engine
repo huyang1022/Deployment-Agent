@@ -1,3 +1,5 @@
-145.100.133.153 root /Users/Oceans/.ssh/id_dsa null
-
-
+129.7.98.10 root /Users/Oceans/.ssh/id_rsa slave
+129.7.98.11 root /Users/Oceans/.ssh/id_rsa slave
+129.7.98.13 root /Users/Oceans/.ssh/id_rsa slave
+129.7.98.12 root /Users/Oceans/.ssh/id_rsa slave
+129.7.98.3 root /Users/Oceans/.ssh/id_rsa slave
