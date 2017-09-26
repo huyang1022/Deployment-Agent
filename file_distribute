@@ -1,6 +1,11 @@
-192.1.242.12 192.168.1.2 root /Users/Oceans/.ssh/id_dsa	100 100 26  6  25m
-192.1.242.16 192.168.1.3 root /Users/Oceans/.ssh/id_dsa	70 70  0  17  100m
-192.1.242.16 192.168.1.3 root /Users/Oceans/.ssh/id_dsa	70 70  18  12  58m
-192.1.242.11 192.168.1.4 root /Users/Oceans/.ssh/id_dsa	50 50  0  10  50m
-192.1.242.11 192.168.1.4 root /Users/Oceans/.ssh/id_dsa	50 50  18  10  38m
-192.1.242.14 192.168.1.5 root /Users/Oceans/.ssh/id_dsa	20 20  10  8  15m
+VM:     Image:      Deadline:
+node0   django      30
+node0   mysql       60
+node1   mongo       30
+node1   nginx       40
+node1   node        70
+node2   cassandra   30
+node2   django      60
+node3   mongo       30
+node3   nginx       50
+node3   node        70

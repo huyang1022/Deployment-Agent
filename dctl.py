@@ -20,7 +20,9 @@ __author__ = 'Yang Hu'
 import argparse, sys
 import time
 from vm_info import VmInfo
-import docker_engine, docker_registry, docker_execute, docker_distribute, docker_kubernetes, docker_swarm, docker_image, control_agent
+import docker_engine, docker_registry, docker_execute, docker_distribute, docker_kubernetes, docker_swarm, docker_image, control_agent, docker_compose, docker_service
+
+import demo_deployment, demo_sequential
 
 def parse_args(args_str):
     description = "Deployment Agent"
@@ -44,6 +46,10 @@ def main():
         docker_registry.run(in_file)
     if args.process == "distribute":
         docker_distribute.run(in_file)
+    if args.process == "deployment":
+        demo_deployment.run(in_file)
+    if args.process == "original":
+        demo_sequential.run(in_file)
         
     while True:
         line = in_file.readline()
@@ -64,6 +70,11 @@ def main():
         docker_execute.run(vm_list)
     if args.process == "agent":
         control_agent.run(vm_list)
+    if args.process == "compose":
+        docker_compose.run(vm_list, "/Users/Oceans/Mog.yml", "mog")
+    if args.process == "service":
+        docker_service.run(vm_list, "test" , "telegreen", "1")
+
 
 
     

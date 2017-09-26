@@ -22,9 +22,15 @@ import threading
 def install_engine(vm):
 	try:
 		print "%s: ====== Start Docker Engine Installing ======" % (vm.ip)
+		paramiko.util.log_to_file("deployment.log")
 		ssh = paramiko.SSHClient()
 		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 		ssh.connect(vm.ip, username=vm.user, key_filename=vm.key)
+		stdin, stdout, stderr = ssh.exec_command("sudo dpkg --get-selections | grep docker")
+		temp_list = stdout.readlines()
+		temp_str = ""
+		for i in temp_list: temp_str += i
+		if temp_str.find("docker") != -1: return
 		sftp = ssh.open_sftp()
 		sftp.chdir('/tmp/')
 		file_path = os.path.dirname(os.path.abspath(__file__))

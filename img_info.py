@@ -16,16 +16,14 @@
  
 
 class ImgInfo:
-	def __init__(self, ip, private_ip, user, key, bandwidth, throughput, start, deadline, image):
+	def __init__(self, ip, user, key, name, image, deadline):
 		self.ip = ip
-		self.private_ip = private_ip
 		self.user = user
 		self.key = key
-		self.bandwidth = bandwidth
-		self.throughput = throughput
-		self.start = start
-		self.deadline = deadline
+		self.name = name
 		self.image = image
+		self.deadline = deadline
+
 		
 	def displayVm(self):
 		print "IP:", self.ip, " USER:", self.user

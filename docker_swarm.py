@@ -22,12 +22,18 @@ from vm_info import VmInfo
 def install_manager(vm):
 	try:
 		print "%s: ====== Start Swarm Manager Installing ======" % (vm.ip)
+		paramiko.util.log_to_file("deployment.log")
 		ssh = paramiko.SSHClient()
 		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 		ssh.connect(vm.ip, username=vm.user, key_filename=vm.key)
+		stdin, stdout, stderr = ssh.exec_command("sudo docker info | grep Swarm")
+		temp_list = stdout.readlines()
+		temp_str = ""
+		for i in temp_list: temp_str += i
+		if temp_str.find("Swarm: active") != -1: return "SUCCESS"
 		stdin, stdout, stderr = ssh.exec_command("sudo docker swarm leave --force")
 		retstr = stdout.readlines()
-		stdin, stdout, stderr = ssh.exec_command("sudo docker swarm init --advertise-addr eth0")
+		stdin, stdout, stderr = ssh.exec_command("sudo docker swarm init --advertise-addr %s" % (vm.ip))
 		retstr = stdout.readlines()
 		print "%s: ========= Swarm Manager Installed =========" % (vm.ip)
 	except Exception as e:
@@ -38,6 +44,7 @@ def install_manager(vm):
 def install_worker(join_cmd, vm):
 	try:
 		print "%s: ====== Start Swarm Worker Installing ======" % (vm.ip)
+		paramiko.util.log_to_file("deployment.log")
 		ssh = paramiko.SSHClient()
 		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 		ssh.connect(vm.ip, username=vm.user, key_filename=vm.key)
@@ -52,12 +59,16 @@ def install_worker(join_cmd, vm):
 
 def run(vm_list):
 	for i in vm_list:
-		if i.role == "master": join_cmd = install_manager(i)
-
-	join_cmd = join_cmd.encode()
-	join_cmd = join_cmd.replace("\n" , "")
-	join_cmd = join_cmd.replace("\\" , "")
-	join_cmd = join_cmd.strip()
+		if i.role == "master":
+			join_cmd = install_manager(i)
+			if "SUCCESS" in join_cmd:
+				return join_cmd
+			else:
+				join_cmd = join_cmd.encode()
+				join_cmd = join_cmd.replace("\n" , "")
+				join_cmd = join_cmd.replace("\\" , "")
+				join_cmd = join_cmd.strip()
+			break
 
 
 	for i in vm_list:

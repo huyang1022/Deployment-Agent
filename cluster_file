@@ -1,0 +1,2 @@
+145.100.133.241 root /tmp/1 master
+145.100.133.243 root /tmp/2 slave

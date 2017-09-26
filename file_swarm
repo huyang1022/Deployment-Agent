@@ -1,3 +1,3 @@
-145.100.133.133 root /Users/Oceans/.ssh/id_dsa  master
-145.100.133.136 root /Users/Oceans/.ssh/id_dsa  slave
-
+139.62.242.10 root /Users/Oceans/.ssh/id_rsa master
+139.62.242.12 root /Users/Oceans/.ssh/id_rsa slave
+139.62.242.11 root /Users/Oceans/.ssh/id_rsa slave
